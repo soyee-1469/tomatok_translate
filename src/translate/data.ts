@@ -392,8 +392,13 @@ export type SampleDoc = { name: string; from: LangId; to: string; daysAgo: numbe
 export const SAMPLE_DOCS: SampleDoc[] = [
   { name: '일정표.pdf', from: 'ko', to: 'en', daysAgo: 0 },
   { name: '계약서_초안.docx', from: 'en', to: 'ko', daysAgo: 1 },
+  { name: '회의록.doc', from: 'ko', to: 'ja', daysAgo: 2 },
   { name: '3분기_매출.xlsx', from: 'ko', to: 'ja', daysAgo: 3 },
+  { name: '재고현황.xls', from: 'ko', to: 'en', daysAgo: 4 },
+  { name: '고객명단.csv', from: 'en', to: 'ko', daysAgo: 5 },
   { name: '제품소개서.pptx', from: 'ko', to: 'zh', daysAgo: 6 },
+  { name: '발표자료.ppt', from: 'ko', to: 'en', daysAgo: 8 },
+  { name: '메모.txt', from: 'ko', to: 'vi', daysAgo: 10 },
 ]
 
 /** 대화 번역 한 마디 */

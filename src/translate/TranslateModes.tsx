@@ -685,7 +685,7 @@ export function DocMode({
             >
               <FileText size={28} {...PH} />
               <b>문서 첨부</b>
-              <span>pdf, docx, xlsx, pptx</span>
+              <span>pdf · doc, docx · xls, xlsx, csv · ppt, pptx · txt</span>
             </button>
           ) : (
             <section className="tr-card tr-file">
