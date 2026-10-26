@@ -297,14 +297,12 @@ export function TalkMode({
   onBack,
   onPick,
   onSwap,
-  onResult,
 }: {
   from: LangId
   to: string
   onBack: () => void
   onPick: (side: PickerSide) => void
   onSwap?: () => void
-  onResult?: (src: string, dst: string) => void
 }) {
   const source = from === 'auto' ? 'ko' : from
   const [lines, setLines] = useState<TalkLine[]>([])
@@ -329,7 +327,6 @@ export function TalkMode({
     timer.current = window.setTimeout(() => {
       setLines((cur) => [...cur, { who, src, dst }])
       setListening(null)
-      onResult?.(src, dst)
       speakOnce(dst, who === 'me' ? to : source)
     }, 900)
   }
@@ -392,14 +389,12 @@ export function ImageMode({
   onBack,
   onPick,
   onSwap,
-  onResult,
 }: {
   from: LangId
   to: string
   onBack: () => void
   onPick: (side: PickerSide) => void
   onSwap?: () => void
-  onResult?: (src: string, dst: string) => void
 }) {
   const source = from === 'auto' ? 'ko' : from
   const [tab, setTab] = useState<'full' | 'live' | 'part'>('full')
@@ -473,7 +468,6 @@ export function ImageMode({
     setPart('')
     setShot(null)
     setCapturedImage('')
-    if (next === 'live') onResult?.('안녕하세요', translateText('안녕하세요', source, to) || '안녕하세요')
   }
 
   const capture = () => {
@@ -485,7 +479,6 @@ export function ImageMode({
       setCapturedImage(canvas.toDataURL('image/png'))
     }
     setShot('camera')
-    if (tab === 'full') onResult?.('안녕하세요', translateText('안녕하세요', source, to) || '안녕하세요')
   }
 
   const resetCapture = () => {
@@ -496,7 +489,6 @@ export function ImageMode({
 
   const pickPart = (text: string) => {
     setPart(text)
-    onResult?.(text, translateText(text, source, to) || text)
   }
 
   return (
@@ -575,6 +567,24 @@ export function ImageMode({
 
 type DocJob = { name: string; status: 'working' | 'done' }
 
+type RecentDoc = { name: string; from: LangId; to: string; at: number }
+
+const DOC_KEY = 'tomatalk-translate-docs'
+
+function loadRecentDocs(): RecentDoc[] {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(DOC_KEY) ?? '[]') as RecentDoc[]
+    return Array.isArray(parsed) ? parsed.filter((d) => d.name) : []
+  } catch {
+    return []
+  }
+}
+
+function docDate(at: number) {
+  const d = new Date(at)
+  return `${d.getMonth() + 1}.${d.getDate()}`
+}
+
 export function DocMode({
   from,
   to,
@@ -590,6 +600,7 @@ export function DocMode({
 }) {
   const [job, setJob] = useState<DocJob | null>(null)
   const [saved, setSaved] = useState(false)
+  const [recent, setRecent] = useState<RecentDoc[]>(loadRecentDocs)
 
   const download = () => {
     if (!job) return
@@ -602,11 +613,33 @@ export function DocMode({
     setSaved(true)
   }
 
+  const rememberDoc = (name: string) => {
+    setRecent((cur) => {
+      const next = [{ name, from, to, at: Date.now() }, ...cur.filter((d) => d.name !== name)].slice(0, 20)
+      try {
+        window.localStorage.setItem(DOC_KEY, JSON.stringify(next))
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
+
   useEffect(() => {
     if (job?.status !== 'working') return
-    const t = window.setTimeout(() => setJob({ name: job.name, status: 'done' }), 800)
+    const name = job.name
+    const t = window.setTimeout(() => {
+      setJob({ name, status: 'done' })
+      rememberDoc(name)
+    }, 800)
     return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job])
+
+  const openRecent = (d: RecentDoc) => {
+    setSaved(false)
+    setJob({ name: d.name, status: 'done' })
+  }
 
   return (
     <div className="tr-full">
@@ -615,7 +648,14 @@ export function DocMode({
       <div className="phone-scroll">
         <div className="tr-page">
           {!job ? (
-            <button type="button" className="tr-drop" onClick={() => setJob({ name: '일정표.pdf', status: 'working' })}>
+            <button
+              type="button"
+              className="tr-drop"
+              onClick={() => {
+                setSaved(false)
+                setJob({ name: '일정표.pdf', status: 'working' })
+              }}
+            >
               <FileText size={28} {...PH} />
               <b>문서 첨부</b>
               <span>pdf, docx, xlsx, pptx</span>
@@ -631,6 +671,30 @@ export function DocMode({
               </div>
             </section>
           )}
+
+          {recent.length ? (
+            <section className="tr-recent-docs">
+              <h2 className="tr-section-title">최근 문서</h2>
+              {recent.map((d) => (
+                <button
+                  key={`${d.name}-${d.at}`}
+                  type="button"
+                  className={`tr-hist-item tr-doc-item${job?.name === d.name ? ' on' : ''}`}
+                  onClick={() => openRecent(d)}
+                >
+                  <span className="tr-doc-ico">
+                    <FileText size={18} {...PH} />
+                  </span>
+                  <span className="tr-doc-body">
+                    <b>{d.name}</b>
+                    <span>
+                      {langOf(d.from).name} → {langOf(d.to).name} · {docDate(d.at)}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </section>
+          ) : null}
         </div>
       </div>
       {job && job.status !== 'working' ? (

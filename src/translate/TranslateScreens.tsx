@@ -6,6 +6,7 @@ import {
   Copy,
   FileText,
   Image,
+  Keyboard,
   Microphone,
   ShareNetwork,
   SpeakerHigh,
@@ -30,7 +31,9 @@ const PH = { weight: 'regular' as const }
 
 type ExtraMode = 'voice' | 'talk' | 'image' | 'doc'
 
-type HistItem = { src: string; dst: string; from: LangId; to: string }
+type HistMode = 'text' | 'voice'
+
+type HistItem = { src: string; dst: string; from: LangId; to: string; mode?: HistMode }
 
 const EXTRA_MODES: { id: ExtraMode; label: string; Icon: Icon; hint: string }[] = [
   { id: 'voice', label: '음성', Icon: Microphone, hint: '마이크를 눌러 말하면 바로 번역돼요' },
@@ -155,9 +158,11 @@ export function TranslateScreen() {
     setPicker(null)
   }
 
-  const remember = (src: string, dst: string) => {
+  const remember = (src: string, dst: string, mode: HistMode = 'text') => {
     if (!src.trim() || !dst.trim()) return
-    setHistory((cur) => [{ src, dst, from: source, to }, ...cur.filter((h) => h.src !== src || h.dst !== dst)].slice(0, 50))
+    setHistory((cur) =>
+      [{ src, dst, from: source, to, mode }, ...cur.filter((h) => h.src !== src || h.dst !== dst)].slice(0, 50),
+    )
   }
 
   useEffect(() => {
@@ -199,7 +204,14 @@ export function TranslateScreen() {
   if (mode === 'voice') {
     return (
       <Phone>
-        <VoiceMode from={from} to={to} onBack={() => setMode(null)} onSwap={swap} onPick={setPicker} onResult={remember} />
+        <VoiceMode
+          from={from}
+          to={to}
+          onBack={() => setMode(null)}
+          onSwap={swap}
+          onPick={setPicker}
+          onResult={(src, dst) => remember(src, dst, 'voice')}
+        />
         {picker ? (
           <LangPicker
             side={picker}
@@ -216,7 +228,7 @@ export function TranslateScreen() {
   if (mode === 'talk') {
     return (
       <Phone>
-        <TalkMode from={from} to={to} onBack={() => setMode(null)} onPick={setPicker} onSwap={swap} onResult={remember} />
+        <TalkMode from={from} to={to} onBack={() => setMode(null)} onPick={setPicker} onSwap={swap} />
         {picker ? (
           <LangPicker
             side={picker}
@@ -233,7 +245,7 @@ export function TranslateScreen() {
   if (mode === 'image') {
     return (
       <Phone>
-        <ImageMode from={from} to={to} onBack={() => setMode(null)} onPick={setPicker} onSwap={swap} onResult={remember} />
+        <ImageMode from={from} to={to} onBack={() => setMode(null)} onPick={setPicker} onSwap={swap} />
         {picker ? (
           <LangPicker
             side={picker}
@@ -284,8 +296,13 @@ export function TranslateScreen() {
                       setShowRecent(false)
                     }}
                   >
-                    <b>{h.src}</b>
-                    <span>{h.dst}</span>
+                    <span className="tr-hist-mode" aria-label={h.mode === 'voice' ? '음성' : '텍스트'}>
+                      {h.mode === 'voice' ? <Microphone size={14} {...PH} /> : <Keyboard size={14} {...PH} />}
+                    </span>
+                    <span className="tr-hist-body">
+                      <b>{h.src}</b>
+                      <span>{h.dst}</span>
+                    </span>
                   </button>
                 ))}
               </div>
