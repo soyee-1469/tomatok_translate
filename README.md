@@ -7,7 +7,7 @@ npm install
 npm run dev
 ```
 
-기본 주소: http://localhost:5173/tomatok_translate/
+기본 주소: http://localhost:5173/tomatok_service/
 
 ## 화면
 
@@ -31,4 +31,4 @@ npm run dev
 
 `main`에 푸시하면 GitHub Actions(`.github/workflows/deploy.yml`)가 빌드해서 GitHub Pages에 올립니다.
 
-- 주소: https://soyee-1469.github.io/tomatok_translate/
+- 주소: https://soyee-1469.github.io/tomatok_service/
