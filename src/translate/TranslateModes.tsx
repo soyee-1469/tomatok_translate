@@ -21,7 +21,7 @@ import {
   SpeakerHigh,
 } from '@phosphor-icons/react'
 import { Header } from '../shell'
-import { LANGS, TARGET_LANGS, langOf, translateText, type LangId, type TalkLine } from './data'
+import { LANGS, TARGET_LANGS, docKind, langOf, translateText, type LangId, type TalkLine } from './data'
 
 const PH = { weight: 'regular' as const }
 
@@ -603,16 +603,6 @@ export function ImageMode({
   )
 }
 
-export type DocKind = 'pdf' | 'doc' | 'xls' | 'ppt' | 'file'
-
-export function docKind(name: string): DocKind {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'pdf') return 'pdf'
-  if (ext === 'doc' || ext === 'docx') return 'doc'
-  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return 'xls'
-  if (ext === 'ppt' || ext === 'pptx') return 'ppt'
-  return 'file'
-}
 
 const DOC_ICONS = { pdf: FilePdf, doc: FileDoc, xls: FileXls, ppt: FilePpt, file: FileText }
 

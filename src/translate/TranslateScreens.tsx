@@ -16,7 +16,7 @@ import {
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { Gnb, Header, Phone } from '../shell'
-import { DocFileIcon, DocMode, ImageMode, LangPicker, TalkMode, VoiceMode, docKind } from './TranslateModes'
+import { DocFileIcon, DocMode, ImageMode, LangPicker, TalkMode, VoiceMode } from './TranslateModes'
 import {
   MAX_CHARS,
   SAMPLE_DOCS,
@@ -24,6 +24,7 @@ import {
   SAMPLE_TALKS,
   TARGET_LANGS,
   detectLang,
+  docKind,
   langOf,
   translateText,
   type LangId,

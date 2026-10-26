@@ -432,3 +432,15 @@ export const SAMPLE_TALKS: SampleTalk[] = [
     ],
   },
 ]
+
+/** 문서 종류 (아이콘·색 구분용) */
+export type DocKind = 'pdf' | 'doc' | 'xls' | 'ppt' | 'file'
+
+export function docKind(name: string): DocKind {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return 'pdf'
+  if (ext === 'doc' || ext === 'docx') return 'doc'
+  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return 'xls'
+  if (ext === 'ppt' || ext === 'pptx') return 'ppt'
+  return 'file'
+}
