@@ -16,7 +16,7 @@ import {
 } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
 import { Gnb, Header, Phone } from '../shell'
-import { DocMode, ImageMode, LangPicker, TalkMode, VoiceMode } from './TranslateModes'
+import { DocFileIcon, DocMode, ImageMode, LangPicker, TalkMode, VoiceMode, docKind } from './TranslateModes'
 import {
   MAX_CHARS,
   SAMPLE_DOCS,
@@ -403,8 +403,8 @@ export function TranslateScreen() {
                         close()
                       }}
                     >
-                      <span className="tr-hist-mode" aria-label="문서">
-                        <FileText size={14} {...PH} />
+                      <span className={`tr-hist-mode tr-file-ico ${docKind(d.name)}`} aria-label="문서">
+                        <DocFileIcon name={d.name} size={16} />
                       </span>
                       <span className="tr-hist-body">
                         <b>{d.name}</b>

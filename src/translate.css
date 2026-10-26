@@ -1594,3 +1594,29 @@
   display: grid;
   place-items: center;
 }
+
+/* 문서 종류별 아이콘 색 */
+.tr-file-ico.pdf {
+  background: #fff0f0;
+  color: #d93025;
+}
+
+.tr-file-ico.doc {
+  background: #eaf2ff;
+  color: #2b63c6;
+}
+
+.tr-file-ico.xls {
+  background: #e9f7ee;
+  color: #1e7d45;
+}
+
+.tr-file-ico.ppt {
+  background: #fff3e6;
+  color: #d9640f;
+}
+
+.tr-file-ico.file {
+  background: #f3f4f6;
+  color: #555;
+}

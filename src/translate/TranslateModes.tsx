@@ -8,7 +8,11 @@ import {
   Check,
   ClockCounterClockwise,
   Copy,
+  FileDoc,
+  FilePdf,
+  FilePpt,
   FileText,
+  FileXls,
   Images,
   Lightning,
   MagnifyingGlass,
@@ -599,6 +603,25 @@ export function ImageMode({
   )
 }
 
+export type DocKind = 'pdf' | 'doc' | 'xls' | 'ppt' | 'file'
+
+export function docKind(name: string): DocKind {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return 'pdf'
+  if (ext === 'doc' || ext === 'docx') return 'doc'
+  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return 'xls'
+  if (ext === 'ppt' || ext === 'pptx') return 'ppt'
+  return 'file'
+}
+
+const DOC_ICONS = { pdf: FilePdf, doc: FileDoc, xls: FileXls, ppt: FilePpt, file: FileText }
+
+/** 파일 확장자에 맞는 문서 아이콘 */
+export function DocFileIcon({ name, size }: { name: string; size: number }) {
+  const Icon = DOC_ICONS[docKind(name)]
+  return <Icon size={size} {...PH} />
+}
+
 type DocJob = { name: string; status: 'working' | 'done' }
 
 export function DocMode({
@@ -676,8 +699,8 @@ export function DocMode({
             </button>
           ) : (
             <section className="tr-card tr-file">
-              <span className="tr-svc-ico">
-                <FileText size={22} {...PH} />
+              <span className={`tr-svc-ico tr-file-ico ${docKind(job.name)}`}>
+                <DocFileIcon name={job.name} size={22} />
               </span>
               <div>
                 <b>{job.name}</b>
