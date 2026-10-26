@@ -88,7 +88,7 @@ export function TranslateScreen() {
   const [speaking, setSpeaking] = useState<SpeakSide | null>(null)
   const [history, setHistory] = useState<HistItem[]>(() => {
     try {
-      const saved = window.localStorage.getItem('tomatalk-translate-history')
+      const saved = window.localStorage.getItem('tomatalk-translate-history-v2')
       const parsed = saved ? (JSON.parse(saved) as HistItem[]) : []
       const items = Array.isArray(parsed) ? parsed.filter((h) => h.src && h.dst) : []
       return items.length ? items : SAMPLE_HISTORY
@@ -176,7 +176,7 @@ export function TranslateScreen() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem('tomatalk-translate-history', JSON.stringify(history))
+      window.localStorage.setItem('tomatalk-translate-history-v2', JSON.stringify(history))
     } catch {
       /* ignore */
     }
