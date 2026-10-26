@@ -1503,3 +1503,71 @@
 .tr-bubble .tr-card-tools {
   margin-top: 8px;
 }
+
+/* GNB — 하단 메뉴 (서비스 홈) */
+.gnb {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 64px;
+  border-top: 1px solid #eee;
+  background: #fff;
+  padding: 0 4px 4px;
+  position: relative;
+}
+
+.gnb .gnb-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding-bottom: 8px;
+  color: #9aa0a6;
+  text-decoration: none;
+}
+
+.gnb .gnb-item.on {
+  color: var(--red);
+}
+
+.gnb .gnb-ico {
+  position: relative;
+  font-size: 18px;
+  line-height: 1;
+  height: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.gnb .gnb-label {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.gnb-dot {
+  position: absolute;
+  top: -1px;
+  right: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid #fff;
+}
+
+.gnb-count {
+  position: absolute;
+  top: -6px;
+  right: -14px;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #2b2b2e;
+  color: #fff;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
