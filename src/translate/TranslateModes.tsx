@@ -16,7 +16,7 @@ import {
   SpeakerHigh,
 } from '@phosphor-icons/react'
 import { Header } from '../shell'
-import { LANGS, TARGET_LANGS, langOf, translateText, type LangId } from './data'
+import { LANGS, SAMPLE_DOCS, TARGET_LANGS, langOf, translateText, type LangId } from './data'
 
 const PH = { weight: 'regular' as const }
 
@@ -571,12 +571,20 @@ type RecentDoc = { name: string; from: LangId; to: string; at: number }
 
 const DOC_KEY = 'tomatalk-translate-docs'
 
+const DAY = 24 * 60 * 60 * 1000
+
+function sampleDocs(): RecentDoc[] {
+  const now = Date.now()
+  return SAMPLE_DOCS.map((d) => ({ name: d.name, from: d.from, to: d.to, at: now - d.daysAgo * DAY }))
+}
+
 function loadRecentDocs(): RecentDoc[] {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(DOC_KEY) ?? '[]') as RecentDoc[]
-    return Array.isArray(parsed) ? parsed.filter((d) => d.name) : []
+    const items = Array.isArray(parsed) ? parsed.filter((d) => d.name) : []
+    return items.length ? items : sampleDocs()
   } catch {
-    return []
+    return sampleDocs()
   }
 }
 

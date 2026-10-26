@@ -19,6 +19,7 @@ import { Gnb, Header, Phone } from '../shell'
 import { DocMode, ImageMode, LangPicker, TalkMode, VoiceMode } from './TranslateModes'
 import {
   MAX_CHARS,
+  SAMPLE_HISTORY,
   TARGET_LANGS,
   detectLang,
   langOf,
@@ -89,9 +90,10 @@ export function TranslateScreen() {
     try {
       const saved = window.localStorage.getItem('tomatalk-translate-history')
       const parsed = saved ? (JSON.parse(saved) as HistItem[]) : []
-      return Array.isArray(parsed) ? parsed.filter((h) => h.src && h.dst) : []
+      const items = Array.isArray(parsed) ? parsed.filter((h) => h.src && h.dst) : []
+      return items.length ? items : SAMPLE_HISTORY
     } catch {
-      return []
+      return SAMPLE_HISTORY
     }
   })
   const [showRecent, setShowRecent] = useState(false)
