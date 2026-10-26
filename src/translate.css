@@ -1620,3 +1620,30 @@
   background: #f3f4f6;
   color: #555;
 }
+
+/* 최근 내역 탭 — 알약형 칩 */
+.tr-chips {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.tr-chip {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #9aa0a6;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tr-chip.on {
+  border-color: var(--red);
+  color: var(--red);
+}

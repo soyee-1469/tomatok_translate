@@ -374,17 +374,17 @@ export function translateText(text: string, from: LangId, to: string) {
 }
 
 /** 최근 내역 예시 — 저장된 내역이 없을 때 보여준다 */
-export type SampleHistory = { src: string; dst: string; from: LangId; to: string; mode: 'text' | 'voice' }
+export type SampleHistory = { src: string; dst: string; from: LangId; to: string; mode: 'text' | 'voice'; hoursAgo: number }
 
 export const SAMPLE_HISTORY: SampleHistory[] = [
-  { src: '회의는 몇 시에 시작하나요?', dst: 'What time does the meeting start?', from: 'ko', to: 'en', mode: 'text' },
-  { src: '이 근처에 약국이 있나요?', dst: 'この近くに薬局はありますか？', from: 'ko', to: 'ja', mode: 'voice' },
-  { src: 'Could you send me the invoice by Friday?', dst: '금요일까지 청구서를 보내 주실 수 있나요?', from: 'en', to: 'ko', mode: 'text' },
-  { src: '공항까지 얼마나 걸려요?', dst: '到机场需要多长时间？', from: 'ko', to: 'zh', mode: 'voice' },
-  { src: '예약을 변경하고 싶습니다.', dst: 'I would like to change my reservation.', from: 'ko', to: 'en', mode: 'text' },
-  { src: 'Xin lỗi, tôi không hiểu.', dst: '죄송해요, 이해하지 못했어요.', from: 'vi', to: 'ko', mode: 'voice' },
-  { src: '배송은 언제 도착하나요?', dst: '¿Cuándo llega el envío?', from: 'ko', to: 'es', mode: 'text' },
-  { src: '내일 오후에 다시 연락드릴게요.', dst: 'I will get back to you tomorrow afternoon.', from: 'ko', to: 'en', mode: 'text' },
+  { src: '회의는 몇 시에 시작하나요?', dst: 'What time does the meeting start?', from: 'ko', to: 'en', mode: 'text', hoursAgo: 1 },
+  { src: '이 근처에 약국이 있나요?', dst: 'この近くに薬局はありますか？', from: 'ko', to: 'ja', mode: 'voice', hoursAgo: 3 },
+  { src: 'Could you send me the invoice by Friday?', dst: '금요일까지 청구서를 보내 주실 수 있나요?', from: 'en', to: 'ko', mode: 'text', hoursAgo: 6 },
+  { src: '공항까지 얼마나 걸려요?', dst: '到机场需要多长时间？', from: 'ko', to: 'zh', mode: 'voice', hoursAgo: 20 },
+  { src: '예약을 변경하고 싶습니다.', dst: 'I would like to change my reservation.', from: 'ko', to: 'en', mode: 'text', hoursAgo: 28 },
+  { src: 'Xin lỗi, tôi không hiểu.', dst: '죄송해요, 이해하지 못했어요.', from: 'vi', to: 'ko', mode: 'voice', hoursAgo: 50 },
+  { src: '배송은 언제 도착하나요?', dst: '¿Cuándo llega el envío?', from: 'ko', to: 'es', mode: 'text', hoursAgo: 75 },
+  { src: '내일 오후에 다시 연락드릴게요.', dst: 'I will get back to you tomorrow afternoon.', from: 'ko', to: 'en', mode: 'text', hoursAgo: 100 },
 ]
 
 export type SampleDoc = { name: string; from: LangId; to: string; daysAgo: number }

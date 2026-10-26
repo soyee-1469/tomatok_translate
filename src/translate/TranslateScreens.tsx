@@ -38,19 +38,23 @@ type ExtraMode = 'voice' | 'talk' | 'image' | 'doc'
 
 type HistMode = 'text' | 'voice'
 
-type HistItem = { src: string; dst: string; from: LangId; to: string; mode?: HistMode }
+type HistItem = { src: string; dst: string; from: LangId; to: string; mode?: HistMode; at?: number }
 
 type RecentDoc = { name: string; from: LangId; to: string; at: number }
 
 type RecentTalk = { id: number; from: LangId; to: string; at: number; lines: TalkLine[] }
 
-type RecentTab = 'text' | 'talk' | 'doc'
+type RecentTab = 'all' | 'text' | 'voice' | 'talk' | 'doc'
 
 const RECENT_TABS: { id: RecentTab; label: string }[] = [
-  { id: 'text', label: '번역' },
+  { id: 'all', label: '전체' },
+  { id: 'text', label: '텍스트' },
+  { id: 'voice', label: '음성' },
   { id: 'talk', label: '대화' },
   { id: 'doc', label: '문서' },
 ]
+
+const HOUR = 60 * 60 * 1000
 
 const DOC_KEY = 'tomatalk-translate-docs-v2'
 const TALK_KEY = 'tomatalk-translate-talks'
@@ -72,6 +76,11 @@ function saveList(key: string, items: unknown) {
   } catch {
     /* ignore */
   }
+}
+
+function sampleHistory(): HistItem[] {
+  const now = Date.now()
+  return SAMPLE_HISTORY.map(({ hoursAgo, ...h }) => ({ ...h, at: now - hoursAgo * HOUR }))
 }
 
 function shortDate(at: number) {
@@ -131,12 +140,12 @@ export function TranslateScreen() {
   const [speaking, setSpeaking] = useState<SpeakSide | null>(null)
   const [history, setHistory] = useState<HistItem[]>(() => {
     try {
-      const saved = window.localStorage.getItem('tomatalk-translate-history-v2')
+      const saved = window.localStorage.getItem('tomatalk-translate-history-v3')
       const parsed = saved ? (JSON.parse(saved) as HistItem[]) : []
       const items = Array.isArray(parsed) ? parsed.filter((h) => h.src && h.dst) : []
-      return items.length ? items : SAMPLE_HISTORY
+      return items.length ? items : sampleHistory()
     } catch {
-      return SAMPLE_HISTORY
+      return sampleHistory()
     }
   })
   const [showRecent, setShowRecent] = useState(false)
@@ -170,7 +179,7 @@ export function TranslateScreen() {
   useEffect(() => saveList(TALK_KEY, talks), [talks])
 
   const openRecent = () => {
-    setRecentTab(mode === 'talk' ? 'talk' : mode === 'doc' ? 'doc' : 'text')
+    setRecentTab(mode === 'talk' ? 'talk' : mode === 'doc' ? 'doc' : mode === 'voice' ? 'voice' : 'all')
     setShowRecent(true)
   }
 
@@ -255,7 +264,7 @@ export function TranslateScreen() {
   const remember = (src: string, dst: string, mode: HistMode = 'text') => {
     if (!src.trim() || !dst.trim()) return
     setHistory((cur) =>
-      [{ src, dst, from: source, to, mode }, ...cur.filter((h) => h.src !== src || h.dst !== dst)].slice(0, 50),
+      [{ src, dst, from: source, to, mode, at: Date.now() }, ...cur.filter((h) => h.src !== src || h.dst !== dst)].slice(0, 50),
     )
   }
 
@@ -267,7 +276,7 @@ export function TranslateScreen() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem('tomatalk-translate-history-v2', JSON.stringify(history))
+      window.localStorage.setItem('tomatalk-translate-history-v3', JSON.stringify(history))
     } catch {
       /* ignore */
     }
@@ -297,129 +306,121 @@ export function TranslateScreen() {
 
   if (showRecent) {
     const close = () => setShowRecent(false)
+
+    const histItem = (h: HistItem) => (
+      <button
+        key={`h-${h.src}-${h.dst}`}
+        type="button"
+        className="tr-hist-item"
+        onClick={() => {
+          setFrom(h.from)
+          setTo(h.to)
+          if (mode === 'voice') setVoiceSeed(h.src)
+          else {
+            setInput(h.src)
+            enterMode(null)
+          }
+          close()
+        }}
+      >
+        <span className="tr-hist-mode" aria-label={h.mode === 'voice' ? '음성' : '텍스트'}>
+          {h.mode === 'voice' ? <Microphone size={14} {...PH} /> : <Keyboard size={14} {...PH} />}
+        </span>
+        <span className="tr-hist-body">
+          <b>{h.src}</b>
+          <span>{h.dst}</span>
+        </span>
+      </button>
+    )
+
+    const talkItem = (t: RecentTalk) => (
+      <button
+        key={`t-${t.id}`}
+        type="button"
+        className="tr-hist-item"
+        onClick={() => {
+          setFrom(t.from)
+          setTo(t.to)
+          setTalkSeed({ id: t.id, lines: t.lines })
+          setVoiceSeed('')
+          setDocSeed('')
+          setMode('talk')
+          close()
+        }}
+      >
+        <span className="tr-hist-mode" aria-label="대화">
+          <ArrowsLeftRight size={14} {...PH} />
+        </span>
+        <span className="tr-hist-body">
+          <b>{t.lines[0]?.src}</b>
+          <span>
+            {t.lines.length}마디 · {langOf(t.from).name} ↔ {langOf(t.to).name} · {shortDate(t.at)}
+          </span>
+        </span>
+      </button>
+    )
+
+    const docItem = (d: RecentDoc) => (
+      <button
+        key={`d-${d.name}-${d.at}`}
+        type="button"
+        className="tr-hist-item"
+        onClick={() => {
+          setFrom(d.from)
+          setTo(d.to)
+          setDocSeed(d.name)
+          setVoiceSeed('')
+          setTalkSeed(null)
+          setMode('doc')
+          close()
+        }}
+      >
+        <span className={`tr-hist-mode tr-file-ico ${docKind(d.name)}`} aria-label="문서">
+          <DocFileIcon name={d.name} size={16} />
+        </span>
+        <span className="tr-hist-body">
+          <b>{d.name}</b>
+          <span>
+            {langOf(d.from).name} → {langOf(d.to).name} · {shortDate(d.at)}
+          </span>
+        </span>
+      </button>
+    )
+
+    let items: React.ReactNode[]
+    if (recentTab === 'all') {
+      items = [
+        ...recent.map((h) => ({ at: h.at ?? 0, el: histItem(h) })),
+        ...talks.map((t) => ({ at: t.at, el: talkItem(t) })),
+        ...docs.map((d) => ({ at: d.at, el: docItem(d) })),
+      ]
+        .sort((a, b) => b.at - a.at)
+        .map((x) => x.el)
+    } else if (recentTab === 'text') items = recent.filter((h) => h.mode !== 'voice').map(histItem)
+    else if (recentTab === 'voice') items = recent.filter((h) => h.mode === 'voice').map(histItem)
+    else if (recentTab === 'talk') items = talks.map(talkItem)
+    else items = docs.map(docItem)
+
     return (
       <Phone>
         <Header title="최근" onBack={close} />
         <div className="phone-scroll">
           <div className="tr-page">
-            <div className="tr-seg" role="tablist" aria-label="최근 내역 종류">
+            <div className="tr-chips" role="tablist" aria-label="최근 내역 종류">
               {RECENT_TABS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   role="tab"
                   aria-selected={recentTab === t.id}
-                  className={recentTab === t.id ? 'on' : ''}
+                  className={`tr-chip${recentTab === t.id ? ' on' : ''}`}
                   onClick={() => setRecentTab(t.id)}
                 >
                   {t.label}
                 </button>
               ))}
             </div>
-
-            {recentTab === 'text' ? (
-              recent.length ? (
-                <div>
-                  {recent.map((h) => (
-                    <button
-                      key={`${h.src}-${h.dst}`}
-                      type="button"
-                      className="tr-hist-item"
-                      onClick={() => {
-                        setFrom(h.from)
-                        setTo(h.to)
-                        if (mode === 'voice') setVoiceSeed(h.src)
-                        else {
-                          setInput(h.src)
-                          enterMode(null)
-                        }
-                        close()
-                      }}
-                    >
-                      <span className="tr-hist-mode" aria-label={h.mode === 'voice' ? '음성' : '텍스트'}>
-                        {h.mode === 'voice' ? <Microphone size={14} {...PH} /> : <Keyboard size={14} {...PH} />}
-                      </span>
-                      <span className="tr-hist-body">
-                        <b>{h.src}</b>
-                        <span>{h.dst}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="tr-thread-empty">없음</p>
-              )
-            ) : null}
-
-            {recentTab === 'talk' ? (
-              talks.length ? (
-                <div>
-                  {talks.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className="tr-hist-item"
-                      onClick={() => {
-                        setFrom(t.from)
-                        setTo(t.to)
-                        setTalkSeed({ id: t.id, lines: t.lines })
-                        setVoiceSeed('')
-                        setDocSeed('')
-                        setMode('talk')
-                        close()
-                      }}
-                    >
-                      <span className="tr-hist-mode" aria-label="대화">
-                        <ArrowsLeftRight size={14} {...PH} />
-                      </span>
-                      <span className="tr-hist-body">
-                        <b>{t.lines[0]?.src}</b>
-                        <span>
-                          {t.lines.length}마디 · {langOf(t.from).name} ↔ {langOf(t.to).name} · {shortDate(t.at)}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="tr-thread-empty">없음</p>
-              )
-            ) : null}
-
-            {recentTab === 'doc' ? (
-              docs.length ? (
-                <div>
-                  {docs.map((d) => (
-                    <button
-                      key={`${d.name}-${d.at}`}
-                      type="button"
-                      className="tr-hist-item"
-                      onClick={() => {
-                        setFrom(d.from)
-                        setTo(d.to)
-                        setDocSeed(d.name)
-                        setVoiceSeed('')
-                        setTalkSeed(null)
-                        setMode('doc')
-                        close()
-                      }}
-                    >
-                      <span className={`tr-hist-mode tr-file-ico ${docKind(d.name)}`} aria-label="문서">
-                        <DocFileIcon name={d.name} size={16} />
-                      </span>
-                      <span className="tr-hist-body">
-                        <b>{d.name}</b>
-                        <span>
-                          {langOf(d.from).name} → {langOf(d.to).name} · {shortDate(d.at)}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="tr-thread-empty">없음</p>
-              )
-            ) : null}
+            {items.length ? <div>{items}</div> : <p className="tr-thread-empty">없음</p>}
           </div>
         </div>
       </Phone>
