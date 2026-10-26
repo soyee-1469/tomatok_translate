@@ -97,6 +97,7 @@ export function TranslateScreen() {
     }
   })
   const [showRecent, setShowRecent] = useState(false)
+  const [voiceSeed, setVoiceSeed] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const detected = useMemo(() => (input.trim() ? detectLang(input) : 'ko'), [input])
   const source = from === 'auto' ? detected : from
@@ -203,16 +204,64 @@ export function TranslateScreen() {
     </div>
   )
 
+  if (showRecent) {
+    return (
+      <Phone>
+        <Header title="최근" onBack={() => setShowRecent(false)} />
+        <div className="phone-scroll">
+          <div className="tr-page">
+            {recent.length ? (
+              <div>
+                {recent.map((h) => (
+                  <button
+                    key={`${h.src}-${h.dst}`}
+                    type="button"
+                    className="tr-hist-item"
+                    onClick={() => {
+                      setFrom(h.from)
+                      setTo(h.to)
+                      if (mode === 'voice') setVoiceSeed(h.src)
+                      else setInput(h.src)
+                      setShowRecent(false)
+                    }}
+                  >
+                    <span className="tr-hist-mode" aria-label={h.mode === 'voice' ? '음성' : '텍스트'}>
+                      {h.mode === 'voice' ? <Microphone size={14} {...PH} /> : <Keyboard size={14} {...PH} />}
+                    </span>
+                    <span className="tr-hist-body">
+                      <b>{h.src}</b>
+                      <span>{h.dst}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="tr-thread-empty">없음</p>
+            )}
+          </div>
+        </div>
+      </Phone>
+    )
+  }
+
   if (mode === 'voice') {
     return (
       <Phone>
         <VoiceMode
           from={from}
           to={to}
-          onBack={() => setMode(null)}
+          onBack={() => {
+            setMode(null)
+            setVoiceSeed('')
+          }}
           onSwap={swap}
           onPick={setPicker}
-          onResult={(src, dst) => remember(src, dst, 'voice')}
+          onResult={(src, dst) => {
+            remember(src, dst, 'voice')
+            setVoiceSeed(src)
+          }}
+          onRecent={() => setShowRecent(true)}
+          initialHeard={voiceSeed}
         />
         {picker ? (
           <LangPicker
@@ -274,45 +323,6 @@ export function TranslateScreen() {
             onClose={() => setPicker(null)}
           />
         ) : null}
-      </Phone>
-    )
-  }
-
-  if (showRecent) {
-    return (
-      <Phone>
-        <Header title="최근" onBack={() => setShowRecent(false)} />
-        <div className="phone-scroll">
-          <div className="tr-page">
-            {recent.length ? (
-              <div>
-                {recent.map((h) => (
-                  <button
-                    key={`${h.src}-${h.dst}`}
-                    type="button"
-                    className="tr-hist-item"
-                    onClick={() => {
-                      setFrom(h.from)
-                      setTo(h.to)
-                      setInput(h.src)
-                      setShowRecent(false)
-                    }}
-                  >
-                    <span className="tr-hist-mode" aria-label={h.mode === 'voice' ? '음성' : '텍스트'}>
-                      {h.mode === 'voice' ? <Microphone size={14} {...PH} /> : <Keyboard size={14} {...PH} />}
-                    </span>
-                    <span className="tr-hist-body">
-                      <b>{h.src}</b>
-                      <span>{h.dst}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="tr-thread-empty">없음</p>
-            )}
-          </div>
-        </div>
       </Phone>
     )
   }

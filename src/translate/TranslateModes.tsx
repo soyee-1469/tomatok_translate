@@ -6,6 +6,7 @@ import {
   Camera,
   CaretDown,
   Check,
+  ClockCounterClockwise,
   Copy,
   FileText,
   Images,
@@ -172,6 +173,8 @@ export function VoiceMode({
   onBack,
   onPick,
   onResult,
+  onRecent,
+  initialHeard = '',
 }: {
   from: LangId
   to: string
@@ -179,8 +182,10 @@ export function VoiceMode({
   onSwap: () => void
   onPick: (side: PickerSide) => void
   onResult?: (src: string, dst: string) => void
+  onRecent?: () => void
+  initialHeard?: string
 }) {
-  const [heard, setHeard] = useState('')
+  const [heard, setHeard] = useState(initialHeard)
   const [listening, setListening] = useState(false)
   const timer = useRef<number | null>(null)
   const source = from === 'auto' ? 'ko' : from
@@ -207,7 +212,17 @@ export function VoiceMode({
 
   return (
     <div className="tr-full">
-      <Header title="음성 번역" onBack={onBack} />
+      <Header
+        title="음성 번역"
+        onBack={onBack}
+        right={
+          onRecent ? (
+            <button type="button" className="icon-btn" aria-label="최근" onClick={onRecent}>
+              <ClockCounterClockwise size={22} {...PH} />
+            </button>
+          ) : undefined
+        }
+      />
       <div className="phone-scroll">
         <div className="tr-page">
           {listening ? (
