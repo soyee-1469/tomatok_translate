@@ -52,7 +52,7 @@ const RECENT_TABS: { id: RecentTab; label: string }[] = [
   { id: 'doc', label: '문서' },
 ]
 
-const DOC_KEY = 'tomatalk-translate-docs'
+const DOC_KEY = 'tomatalk-translate-docs-v2'
 const TALK_KEY = 'tomatalk-translate-talks'
 const DAY = 24 * 60 * 60 * 1000
 
