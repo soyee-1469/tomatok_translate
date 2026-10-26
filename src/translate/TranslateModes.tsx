@@ -17,7 +17,7 @@ import {
   SpeakerHigh,
 } from '@phosphor-icons/react'
 import { Header } from '../shell'
-import { LANGS, SAMPLE_DOCS, TARGET_LANGS, langOf, translateText, type LangId } from './data'
+import { LANGS, TARGET_LANGS, langOf, translateText, type LangId, type TalkLine } from './data'
 
 const PH = { weight: 'regular' as const }
 
@@ -304,23 +304,32 @@ export function VoiceMode({
   )
 }
 
-type TalkLine = { who: 'me' | 'them'; src: string; dst: string }
-
 export function TalkMode({
   from,
   to,
   onBack,
   onPick,
   onSwap,
+  onRecent,
+  onLinesChange,
+  initialLines,
 }: {
   from: LangId
   to: string
   onBack: () => void
   onPick: (side: PickerSide) => void
   onSwap?: () => void
+  onRecent?: () => void
+  onLinesChange?: (lines: TalkLine[]) => void
+  initialLines?: TalkLine[]
 }) {
   const source = from === 'auto' ? 'ko' : from
-  const [lines, setLines] = useState<TalkLine[]>([])
+  const [lines, setLines] = useState<TalkLine[]>(initialLines ?? [])
+
+  useEffect(() => {
+    if (lines.length) onLinesChange?.(lines)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines])
   const [listening, setListening] = useState<TalkLine['who'] | null>(null)
   const timer = useRef<number | null>(null)
 
@@ -350,7 +359,17 @@ export function TalkMode({
 
   return (
     <div className="tr-full">
-      <Header title="대화 번역" onBack={onBack} />
+      <Header
+        title="대화 번역"
+        onBack={onBack}
+        right={
+          onRecent ? (
+            <button type="button" className="icon-btn" aria-label="최근" onClick={onRecent}>
+              <ClockCounterClockwise size={22} {...PH} />
+            </button>
+          ) : undefined
+        }
+      />
       <ModeLangs from={from} to={to} onPick={onPick} onSwap={onSwap} />
       <div className="phone-scroll">
         <div className="tr-page">
@@ -582,48 +601,27 @@ export function ImageMode({
 
 type DocJob = { name: string; status: 'working' | 'done' }
 
-type RecentDoc = { name: string; from: LangId; to: string; at: number }
-
-const DOC_KEY = 'tomatalk-translate-docs'
-
-const DAY = 24 * 60 * 60 * 1000
-
-function sampleDocs(): RecentDoc[] {
-  const now = Date.now()
-  return SAMPLE_DOCS.map((d) => ({ name: d.name, from: d.from, to: d.to, at: now - d.daysAgo * DAY }))
-}
-
-function loadRecentDocs(): RecentDoc[] {
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(DOC_KEY) ?? '[]') as RecentDoc[]
-    const items = Array.isArray(parsed) ? parsed.filter((d) => d.name) : []
-    return items.length ? items : sampleDocs()
-  } catch {
-    return sampleDocs()
-  }
-}
-
-function docDate(at: number) {
-  const d = new Date(at)
-  return `${d.getMonth() + 1}.${d.getDate()}`
-}
-
 export function DocMode({
   from,
   to,
   onBack,
   onPick,
   onSwap,
+  onRecent,
+  onDone,
+  initialDoc,
 }: {
   from: LangId
   to: string
   onBack: () => void
   onPick: (side: PickerSide) => void
   onSwap?: () => void
+  onRecent?: () => void
+  onDone?: (name: string) => void
+  initialDoc?: string
 }) {
-  const [job, setJob] = useState<DocJob | null>(null)
+  const [job, setJob] = useState<DocJob | null>(initialDoc ? { name: initialDoc, status: 'done' } : null)
   const [saved, setSaved] = useState(false)
-  const [recent, setRecent] = useState<RecentDoc[]>(loadRecentDocs)
 
   const download = () => {
     if (!job) return
@@ -636,37 +634,30 @@ export function DocMode({
     setSaved(true)
   }
 
-  const rememberDoc = (name: string) => {
-    setRecent((cur) => {
-      const next = [{ name, from, to, at: Date.now() }, ...cur.filter((d) => d.name !== name)].slice(0, 20)
-      try {
-        window.localStorage.setItem(DOC_KEY, JSON.stringify(next))
-      } catch {
-        /* ignore */
-      }
-      return next
-    })
-  }
-
   useEffect(() => {
     if (job?.status !== 'working') return
     const name = job.name
     const t = window.setTimeout(() => {
       setJob({ name, status: 'done' })
-      rememberDoc(name)
+      onDone?.(name)
     }, 800)
     return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job])
 
-  const openRecent = (d: RecentDoc) => {
-    setSaved(false)
-    setJob({ name: d.name, status: 'done' })
-  }
-
   return (
     <div className="tr-full">
-      <Header title="문서 번역" onBack={onBack} />
+      <Header
+        title="문서 번역"
+        onBack={onBack}
+        right={
+          onRecent ? (
+            <button type="button" className="icon-btn" aria-label="최근" onClick={onRecent}>
+              <ClockCounterClockwise size={22} {...PH} />
+            </button>
+          ) : undefined
+        }
+      />
       <ModeLangs from={from} to={to} onPick={onPick} onSwap={onSwap} />
       <div className="phone-scroll">
         <div className="tr-page">
@@ -694,30 +685,6 @@ export function DocMode({
               </div>
             </section>
           )}
-
-          {recent.length ? (
-            <section className="tr-recent-docs">
-              <h2 className="tr-section-title">최근 문서</h2>
-              {recent.map((d) => (
-                <button
-                  key={`${d.name}-${d.at}`}
-                  type="button"
-                  className={`tr-hist-item tr-doc-item${job?.name === d.name ? ' on' : ''}`}
-                  onClick={() => openRecent(d)}
-                >
-                  <span className="tr-doc-ico">
-                    <FileText size={18} {...PH} />
-                  </span>
-                  <span className="tr-doc-body">
-                    <b>{d.name}</b>
-                    <span>
-                      {langOf(d.from).name} → {langOf(d.to).name} · {docDate(d.at)}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </section>
-          ) : null}
         </div>
       </div>
       {job && job.status !== 'working' ? (

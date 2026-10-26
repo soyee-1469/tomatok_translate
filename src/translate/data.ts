@@ -395,3 +395,40 @@ export const SAMPLE_DOCS: SampleDoc[] = [
   { name: '3분기_매출.xlsx', from: 'ko', to: 'ja', daysAgo: 3 },
   { name: '제품소개서.pptx', from: 'ko', to: 'zh', daysAgo: 6 },
 ]
+
+/** 대화 번역 한 마디 */
+export type TalkLine = { who: 'me' | 'them'; src: string; dst: string }
+
+export type SampleTalk = { from: LangId; to: string; daysAgo: number; lines: TalkLine[] }
+
+export const SAMPLE_TALKS: SampleTalk[] = [
+  {
+    from: 'ko',
+    to: 'en',
+    daysAgo: 0,
+    lines: [
+      { who: 'me', src: '이 메뉴 추천해 주실 수 있나요?', dst: 'Could you recommend something from this menu?' },
+      { who: 'them', src: 'The grilled fish is very popular.', dst: '구운 생선이 아주 인기가 많아요.' },
+      { who: 'me', src: '그걸로 할게요.', dst: "I'll have that." },
+    ],
+  },
+  {
+    from: 'ko',
+    to: 'ja',
+    daysAgo: 2,
+    lines: [
+      { who: 'me', src: '체크인하려고 합니다.', dst: 'チェックインをお願いします。' },
+      { who: 'them', src: 'パスポートをお見せください。', dst: '여권을 보여 주세요.' },
+    ],
+  },
+  {
+    from: 'ko',
+    to: 'en',
+    daysAgo: 5,
+    lines: [
+      { who: 'me', src: '지하철역이 어디예요?', dst: 'Where is the subway station?' },
+      { who: 'them', src: 'Go straight and turn left.', dst: '직진해서 왼쪽으로 가세요.' },
+      { who: 'me', src: '감사합니다!', dst: 'Thank you!' },
+    ],
+  },
+]
